@@ -36,7 +36,7 @@ const ships = (length, pos, direction) => {
     }
   };
 
-  return { body, hit, size };
+  return { body, hit, size, direction, pos };
 };
 
 const gameBoard = (() => {
@@ -144,6 +144,17 @@ const gameBoard = (() => {
     }
   };
 
+  function movePiece(x, y) {
+    const index = board[x][y]
+
+    if (index === -1) {
+      return
+    } else {
+      return pieceArr[index]
+    }
+
+  }
+
   return { pieces, attack, p1Board };
 })();
 
@@ -197,6 +208,7 @@ const htmlControl = (() => {
   const genBoard = (player) => {
     const board = document.createElement("div");
     let arr = [];
+    let movable = true
 
     for (let x = 0; x < 10; x++) {
       let rowArr = [];
@@ -224,6 +236,27 @@ const htmlControl = (() => {
 
   const p1Grid = genBoard("p1");
   const cpuGrid = genBoard("cpu");
+
+
+  function movement(e) {
+    const y = getIndex(e.target)
+    const x = getIndex(e.currentTarget)
+
+    const clickedPiece = gameBoard.movePiece(x, y)
+    const size = clickedPiece.size
+    const direction = clickedPiece.direction
+    let iter = direction === 0 ? clickedPiece.pos[1] : clickedPiece[0]
+    let constant = direction === 0 ? clickedPiece[0] : clickedPiece[1]
+    let divs = []
+
+    for (let a = iter; a < size; a++) {
+      let target = direction === 0 ? p1Grid[constant][a] : p1Grid[a][constant]
+      divs.push(target)
+    }
+
+    
+
+  }
 
   (function colorShips() {
     const board = gameBoard.p1Board;
