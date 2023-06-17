@@ -1,0 +1,74 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+div#main {
+  width: 80%;
+  display: flex;
+  justify-content: space-evenly;
+}
+
+div.gameboard {
+  width: 40%;
+  height: 30vh;
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: repeat(10, 1fr);
+  gap: 4px;
+  margin: 0;
+}
+
+div.row {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  grid-template-rows: 1fr;
+  gap: 4px;
+
+}
+
+div.ship {
+  background-color: rgb(49, 48, 48);
+}
+
+div.missed {
+  background-color: aqua;
+}
+
+div.hit {
+  background-color: red;
+}
+
+div.show {
+  background-color: aqua;
+  width: 100%;
+
+}
+
+div.hide {
+  background-color: gray;
+}
+
+div#list {
+  max-height: 8rem;
+  transition: all 0.5s ease-in;
+  overflow: hidden;
+}
+
+div#list:hover {
+  max-height: 15rem;
+  overflow: scroll;
+}
+
+ul#events li {
+    list-style-type: none;
+}
