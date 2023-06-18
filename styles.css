@@ -60,6 +60,7 @@ div.hide {
 
 div#list {
   max-height: 8rem;
+  width: 75%;
   transition: all 0.5s ease-in;
   overflow: hidden;
 }
