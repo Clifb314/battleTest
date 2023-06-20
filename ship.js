@@ -6,8 +6,8 @@ const ships = (length, pos, direction) => {
     let positionArr = [];
     if (direction === 1) {
       //x and y are mixed up here, lets just reverse it for now
-      for (let x = 0; x < length; x++) {
-        let a = x + pos[0];
+      for (let j = 0; j < length; j++) {
+        let a = j + pos[0];
         positionArr.push({ x: a, y: pos[1] });
       }
     } else {
@@ -78,8 +78,8 @@ const gameBoard = (() => {
     let x = 1;
     let arr = [start];
     while (x < length) {
-      let a = direction === 1 ? start[0] : start[0] + x;
-      let b = direction === 1 ? start[1] + x : start[1];
+      let a = direction === 0 ? start[0] : start[0] + x;
+      let b = direction === 0 ? start[1] + x : start[1];
       arr.push([a, b]);
       x++;
     }
@@ -106,21 +106,30 @@ const gameBoard = (() => {
         used.push(pos);
       }
       pieceArr.push(ship);
-      addToBoard(start, direction, length, board);
+      //addToBoard(start, direction, length, board);
+      addToBoard(ship, board)
     } else {
       placement(length, board);
     }
   }
 
-  function addToBoard(start, direction, length, board) {
-    let pieceArr = board === p1Board ? p1Pieces : cpuPieces;
-    const index = pieceArr.length - 1;
-    for (let x = 0; x < length; x++) {
-      let a = direction === 1 ? start[0] : start[0] + x;
-      let b = direction === 1 ? start[1] + x : start[1];
-      board[a][b] = index;
+  // function addToBoard(start, direction, length, board) {
+  //   let pieceArr = board === p1Board ? p1Pieces : cpuPieces;
+  //   const index = pieceArr.length - 1;
+  //   for (let x = 0; x < length; x++) {
+  //     let a = direction === 1 ? start[0] : start[0] + x;
+  //     let b = direction === 1 ? start[1] + x : start[1];
+  //     board[a][b] = index;
+  //   }
+  // }
+
+  function addToBoard(ship, board) {
+    const index = board === p1Board ? p1Pieces.length - 1 : cpuPieces.length - 1
+    for (const pos of ship.body) {
+      board[pos.x][pos.y] = index
     }
   }
+
 
   const pieces = (player) => {
     //player === 0 is p1
@@ -146,18 +155,19 @@ const gameBoard = (() => {
   };
 
   function movePiece(x, y) {
-    const index = board[x][y];
+    const index = p1Board[x][y];
 
     if (index === -1) {
       return;
     } else {
-      removePiece(index)
-      return pieceArr[index];
+      let tmp = [...p1Pieces];
+      removePiece(index);
+      return tmp[index];
     }
   }
 
   function removePiece(index) {
-    const body = pieceArr[index].body;
+    const body = p1Pieces[index].body;
 
     for (const pos of body) {
       p1Board[pos.x][pos.y] = -1;
@@ -167,20 +177,28 @@ const gameBoard = (() => {
   }
 
   function checkPlacement(start, direction, length) {
-    return checkWhole(start, direction, length, p1Board)
+    return checkWhole(start, direction, length, p1Board);
   }
 
   function replace(start, length, direction) {
-    const index = pieceArr.findIndex(e => e === null)
+    const index = p1Pieces.findIndex((e) => e === null);
     p1Pieces[index] = ships(length, start, direction);
-    const body = p1Board[index].body
+    const body = p1Pieces[index].body;
     for (pos of body) {
-      p1Board[pos.x][pos.y] = index
+      p1Board[pos.x][pos.y] = index;
     }
-    return body
+    return body;
   }
 
-  return { pieces, attack, p1Board, movePiece, removePiece, replace, checkPlacement };
+  return {
+    pieces,
+    attack,
+    p1Board,
+    movePiece,
+    removePiece,
+    replace,
+    checkPlacement,
+  };
 })();
 
 gameBoard.pieces(0);
@@ -194,8 +212,8 @@ const htmlControl = (() => {
   let cpuHits = 0;
   let cpuLast = [];
   let movable = true;
-  let moveDirection = null
-  let moveSize = null
+  let moveDirection = null;
+  let moveSize = null;
 
   function getIndex(element) {
     let tester = element;
@@ -212,7 +230,7 @@ const htmlControl = (() => {
     if (
       turn === 1 ||
       e.target.className === "missed" ||
-      e.target.className === "hit"
+      e.target.className === "hit" || !movable
     ) {
       return;
     }
@@ -254,7 +272,7 @@ const htmlControl = (() => {
       }
 
       if (player === "p1") {
-        row.addEventListener("click", movement);
+        row.addEventListener("click", movement, {once: true});
       }
       board.appendChild(row);
     }
@@ -267,94 +285,112 @@ const htmlControl = (() => {
   const p1Grid = genBoard("p1");
   const cpuGrid = genBoard("cpu");
 
-  function followMouse(e, div) {
-    div.style.left = `${e.pageX} px`;
-    div.style.top = `${e.pageY} px`;
+  function followMouse(e) {
+    const follower = document.getElementById('followerDiv')
+    log(e.pageX, e.pageY)
+    follower.style.left = `calc(${e.pageX}px - 2vw)`;
+    follower.style.top = `calc(${e.pageY}px + 2vh)`;
   }
 
-  function toggleDir() {
-    const followers = document.getElementById('followerDiv')
-    if (moveDirection === 0) {
-      moveDirection = 1
-      followers.style.gridTemplateColumns = '1fr'
-      followers.style.gridTemplateRows = `repeat(${moveSize},  1fr)`
-    } else {
-      moveDirection = 0
-      followers.style.gridTemplateColumns = `repeat(${moveSize},  1fr)`
-      followers.style.gridTemplateRows = `1fr`
+  function toggleDir(e) {
+    if (e.keyCode !== 32) {
+      return
     }
+    const followers = document.getElementById("followerDiv");
+    if (moveDirection === 0) {
+      moveDirection = 1;
+      followers.style.gridTemplateColumns = "1fr";
+      followers.style.gridTemplateRows = `repeat(${moveSize},  1fr)`;
+    } else {
+      moveDirection = 0;
+      followers.style.gridTemplateColumns = `repeat(${moveSize},  1fr)`;
+      followers.style.gridTemplateRows = `1fr`;
+    }
+  }
+
+  //for testing
+  function log(x, y) {
+    const el = document.getElementById('coord')
+    el.textContent = `x = ${x}, y = ${y}`
   }
 
   function removeListeners() {
-    for (const row in p1Grid) {
-      row.removeEventListener('click', placePiece)
+    for (const row of p1Grid) {
+        row[0].parentElement.removeEventListener("click", placePiece);
+      
     }
-      body.removeEventListener('rightclick', toggleDir)
-      document.getElementById('followerDIv').remove()
-    
+    document.removeEventListener("keydown", toggleDir);
+    document.getElementById('followerDiv').removeEventListener("mousemove", followMouse)
+    document.getElementById("followerDiv").remove();
   }
 
   function movement(e) {
+    if (e.target.className !== "ship" || !movable) {
+      return;
+    }
+
     const y = getIndex(e.target);
     const x = getIndex(e.currentTarget);
 
     const clickedPiece = gameBoard.movePiece(x, y);
     const size = clickedPiece.size;
-    moveSize = size
+    moveSize = size;
     const direction = clickedPiece.direction;
-    moveDirection = direction
+    moveDirection = direction;
     let iter = direction === 0 ? clickedPiece.pos[1] : clickedPiece.pos[0];
     let constant = direction === 0 ? clickedPiece.pos[0] : clickedPiece.pos[1];
-    let divs = [];
-    const followers = document.createElement('div')
-    const playerBoard = document.querySelector('div.gameboard')
-    followers.setAttribute('id', 'followerDiv')
-    gameBoard.appendChild(followers)
-    let gridRows = direction === 0 ? `1fr` :  `repeat(${size}, 1fr)`
-    let gridCols = direction === 1 ? `1fr` :  `repeat(${size}, 1fr)`
-    followers.cssText = `
-      display: grid;
-      grid-template-columns: ${gridCols};
-      grid-template-rows: ${gridRows};
-      gap: 4px;
-      position: absolute;
-      left: ${e.clientX} px;
-      top: ${e.clientY} px;
-    `
+    const followers = document.createElement("div");
+    const playerBoard = document.querySelector("div.gameboard");
+    followers.setAttribute("id", "followerDiv");
+    //playerBoard.appendChild(followers);
+    let gridRows = direction === 0 ? `1fr` : `repeat(${size}, 1fr)`;
+    let gridCols = direction === 1 ? `1fr` : `repeat(${size}, 1fr)`;
+    followers.style.gridTemplateColumns = gridCols
+    followers.style.gridTemplateRows = gridRows
+    followers.style.left = `calc(${e.clientX}px - 2vw)`
+    followers.style.top = `calc(${e.clientY}px + 2vh)`
+    log(e.clientX, e.clientY)
 
-    for (let a = iter; a < size; a++) {
-      let target = direction === 0 ? p1Grid[constant][a] : p1Grid[a][constant];
-      target.className = 'show';
-      const div = document.createElement('div')
-      div.className = `ship`
-      followers.appendChild(div)
+    for (let a = 0; a < size; a++) {
+      let target =
+        direction === 0
+          ? p1Grid[constant][a + iter]
+          : p1Grid[a + iter][constant];
+      target.className = "show";
+      const div = document.createElement("div");
+      div.className = `moving`;
+      followers.appendChild(div);
     }
-    followers.addEventListener("mousemove", followMouse);
+    playerBoard.appendChild(followers);
+    playerBoard.addEventListener("mousemove", followMouse);
 
-    for (const row in p1Grid) {
-      row.addEventListener('click', placePiece)
+    for (const row of p1Grid) {
+        row[0].parentElement.addEventListener("click", placePiece);
     }
 
-    body.addEventListener('rightclick', toggleDir)
+    document.addEventListener("keydown", toggleDir);
+    movable = false;
   }
 
   function placePiece(e) {
-    let start = e.target
+    let start = e.target;
 
-    if (start.className === 'ship') {
+    if (start.className === "ship" || movable) {
       //handle error
-      return
+      return;
     }
-    const y = getIndex(e.target)
-    const x = getIndex(e.currentTarget)
+    const y = getIndex(start);
+    const x = getIndex(start.parentElement);
 
     if (gameBoard.checkPlacement) {
-      removeListeners()
-      const body = gameBoard.replace([x, y], moveDirection, moveSize)
+      removeListeners();
+      const body = gameBoard.replace([x, y], moveSize, moveDirection);
       for (pos of body) {
-        p1Grid[pos.x][pos.y].className = 'ship'
+        p1Grid[pos.x][pos.y].className = "ship";
       }
     }
+    movable = true;
+    return
   }
 
   (function colorShips() {

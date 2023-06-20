@@ -9,10 +9,11 @@ body {
   display: flex;
   flex-direction: column;
   justify-content: center;
+  align-items: center;
 }
 
 div#main {
-  width: 80%;
+  width: 100%;
   display: flex;
   justify-content: space-evenly;
 }
@@ -36,7 +37,7 @@ div.row {
 
 }
 
-div.ship {
+div.ship, div.moving {
   background-color: rgb(49, 48, 48);
 }
 
@@ -72,4 +73,18 @@ div#list:hover {
 
 ul#events li {
     list-style-type: none;
+}
+
+div#followerDiv {
+  display: grid;
+  gap: 4px;
+  z-index: 10;
+  transform: translate(-50%, -50%);
+  position: absolute;
+  background-color: red;
+}
+
+div.moving {
+  width: calc(4vw - 4px);
+  height: calc(3vh - 4px);
 }
